@@ -1,25 +1,26 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import axios from 'axios';
 
 export async function POST(request) {
   const { edad, tema } = await request.json();
 
-  const prompt = `Escribe una historia para un niño de ${edad} años sobre ${tema}.`;
+  const prompt = `Escribe un capítulo de un cuento para niños de ${edad} años sobre ${tema}. El capítulo debe tener un principio, desarrollo y final, y debe estar escrito completamente en español. Usa un lenguaje claro y adecuado para niños.`;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 500,
-    });
+    const response = await axios.post(
+      'https://api-inference.huggingface.co/models/gpt2', // Modelo de ejemplo (puedes cambiarlo)
+      { inputs: prompt },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY}`,
+        },
+      }
+    );
 
-    const historia = completion.choices[0].message.content;
-    return NextResponse.json({ historia });
+    const cuento = response.data[0].generated_text;
+    return NextResponse.json({ cuento });
   } catch (error) {
-    return NextResponse.json({ error: 'Error al generar la historia' }, { status: 500 });
+    console.error('Error:', error);
+    return NextResponse.json({ error: 'Error al generar el cuento' }, { status: 500 });
   }
 }

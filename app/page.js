@@ -1,4 +1,4 @@
-'use client'; // Marca el componente como del lado del cliente
+'use client';
 
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
@@ -8,14 +8,15 @@ export default function Home() {
   const router = useRouter();
 
   const onSubmit = async (data) => {
-    // Enviar datos a la API y redirigir a la página del libro
-    const response = await fetch('/api/generar-historia', {
+    const response = await fetch('/api/generar-cuento', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    const { historia } = await response.json();
-    router.push(`/libro?historia=${encodeURIComponent(historia)}`);
+    const { cuento } = await response.json();
+
+    // Redirige a la página del libro con el cuento en la URL
+    router.push(`/libro?cuento=${encodeURIComponent(cuento)}`);
   };
 
   return (
