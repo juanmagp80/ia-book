@@ -1,26 +1,34 @@
 import { NextResponse } from 'next/server';
-import axios from 'axios';
+import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function POST(request) {
   const { edad, tema } = await request.json();
 
-  const prompt = `Escribe un capítulo de un cuento para niños de ${edad} años sobre ${tema}. El capítulo debe tener un principio, desarrollo y final, y debe estar escrito completamente en español. Usa un lenguaje claro y adecuado para niños.`;
+  // Definir la cantidad de palabras según la edad
+  let palabras = 300; // Valor por defecto
+  if (edad >= 0 && edad <= 3) palabras = 300;
+  else if (edad >= 4 && edad <= 6) palabras = 800;
+  else if (edad >= 7 && edad <= 9) palabras = 3000;
+  else if (edad >= 10 && edad <= 12) palabras = 10000;
+
+  const prompt = `Escribe un cuento para niños de aproximadamente ${palabras} palabras para ${edad} años sobre ${tema}. Debe tener un principio, desarrollo y final, y estar escrito en español con un lenguaje claro y adecuado para la edad indicada.`;
 
   try {
-    const response = await axios.post(
-      'https://api-inference.huggingface.co/models/gpt2', // Modelo de ejemplo (puedes cambiarlo)
-      { inputs: prompt },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.HUGGING_FACE_API_KEY}`,
-        },
-      }
-    );
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: Math.min(palabras * 2, 4096), // Ajuste de tokens
+    });
 
-    const cuento = response.data[0].generated_text;
+    const cuento = completion.choices[0].message.content;
     return NextResponse.json({ cuento });
   } catch (error) {
     console.error('Error:', error);
     return NextResponse.json({ error: 'Error al generar el cuento' }, { status: 500 });
   }
 }
+

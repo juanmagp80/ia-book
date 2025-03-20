@@ -1,21 +1,20 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function Libro() {
-  const searchParams = useSearchParams();
-  const cuento = searchParams.get('cuento');
+  const [cuento, setCuento] = useState('');
+
+  useEffect(() => {
+    // Obtener el cuento desde localStorage
+    const cuentoGuardado = localStorage.getItem('cuentoGenerado');
+    setCuento(cuentoGuardado || 'No hay cuento disponible.');
+  }, []);
 
   return (
     <div className="p-10">
-      <h1 className="text-3xl font-bold mb-5">Tu libro creado</h1>
-      <div className="space-y-4">
-        {cuento ? (
-          <pre className="whitespace-pre-wrap">{cuento}</pre>
-        ) : (
-          <p>No se pudo generar el cuento. Inténtalo de nuevo.</p>
-        )}
-      </div>
+      <h1 className="text-3xl font-bold mb-5">Tu Historia Generada</h1>
+      <p className="whitespace-pre-line">{cuento}</p>
     </div>
   );
 }
