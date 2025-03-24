@@ -1,98 +1,108 @@
 'use client';
-
-import { useEffect, useState } from 'react';
-import domtoimage from 'dom-to-image'; // Alternativa a html2canvas
+import domtoimage from 'dom-to-image';
+import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
-
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function Libro() {
   const [cuento, setCuento] = useState('');
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    // Obtener el cuento desde localStorage
     const cuentoGuardado = localStorage.getItem('cuentoGenerado');
-    console.log(cuentoGuardado); // Verifica si el valor se está recuperando correctamente
     setCuento(cuentoGuardado || 'No hay cuento disponible.');
-    setLoading(false); // Finaliza la carga
+    setLoading(false);
   }, []);
 
-  // Función para descargar el contenido como PDF
-  const descargarPDF = () => {
-    const input = document.getElementById('contenido-libro'); // Selecciona el contenedor del libro
+  const descargarPDF = async () => {
+    setDownloading(true);
+    try {
+      const input = document.getElementById('contenido-libro');
+      const imgData = await domtoimage.toPng(input, { quality: 1 });
 
-    if (input) {
-      // Oculta los botones temporalmente
-      const botones = document.querySelectorAll('.ocultar-en-pdf');
-      botones.forEach((boton) => (boton.style.display = 'none'));
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const imgHeight = (input.offsetHeight * imgWidth) / input.offsetWidth;
 
-      domtoimage
-        .toPng(input, { quality: 1 }) // Captura el contenido como PNG
-        .then((imgData) => {
-          const pdf = new jsPDF('p', 'mm', 'a4'); // Crea un PDF en formato A4
-          const imgWidth = 210; // Ancho del PDF (A4)
-          const imgHeight = (input.offsetHeight * imgWidth) / input.offsetWidth; // Calcula la altura proporcional
-
-          pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight); // Añade la imagen al PDF
-          pdf.save('cuento-generado.pdf'); // Descarga el PDF
-        })
-        .catch((error) => {
-          console.error('Error al generar el PDF:', error);
-        })
-        .finally(() => {
-          // Vuelve a mostrar los botones después de generar el PDF
-          botones.forEach((boton) => (boton.style.display = 'block'));
-        });
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      pdf.save('mi-cuento-magico.pdf');
+    } finally {
+      setDownloading(false);
     }
   };
 
-  // Si está cargando, muestra un mensaje de carga
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-        <div className="max-w-4xl w-full bg-white p-8 rounded-lg shadow-xl text-center">
-          <p className="text-xl text-black">Cargando...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <img src="/loading.gif" alt="Cargando..." className="w-32 h-32" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-      <div className="max-w-4xl w-full bg-white p-8 rounded-lg shadow-xl">
-        <div className="relative" id="contenido-libro">
-          {/* Borde y sombra para simular un libro */}
-          <div className="absolute top-0 left-0 right-0 bottom-0 bg-gradient-to-br from-gray-300 to-gray-500 rounded-xl border-4 border-gray-700 z-0"></div>
-
-          {/* Título del libro */}
-          <h1 className="text-5xl font-extrabold text-black text-center mb-8 relative z-10">
-            ¡Tu Historia Generada!
-          </h1>
-
-          {/* Contenedor que simula las páginas del libro */}
-          <div className="bg-white p-8 rounded-lg shadow-md border border-gray-400 text-justify relative z-10">
-            <p className="text-xl text-black leading-relaxed whitespace-normal">
-              {cuento}
-            </p>
+    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-3xl mx-auto"
+      >
+        <div
+          id="contenido-libro"
+          className="bg-white rounded-xl shadow-2xl overflow-hidden border-8 border-amber-100"
+        >
+          {/* Portada del libro */}
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-8 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+              Mi Cuento Mágico
+            </h1>
+            <p className="text-xl text-blue-100">Una historia creada especialmente para ti</p>
           </div>
 
-          {/* Botones para generar otro cuento y descargar PDF */}
-          <div className="mt-6 flex justify-center gap-4 relative z-10">
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-700 transition ocultar-en-pdf"
-            >
-              Generar Otro Cuento
-            </button>
-            <button
-              onClick={descargarPDF}
-              className="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 transition ocultar-en-pdf"
-            >
-              Descargar PDF
-            </button>
+          {/* Contenido del libro */}
+          <div className="p-8 md:p-12 text-lg leading-relaxed">
+            {cuento.split('\n').map((paragraph, i) => (
+              <p key={i} className="mb-6">{paragraph}</p>
+            ))}
+          </div>
+
+          {/* Página final */}
+          <div className="bg-amber-50 p-8 text-center italic text-gray-600">
+            <p>Fin</p>
           </div>
         </div>
-      </div>
+
+        <div className="flex justify-center gap-4 mt-8">
+          <motion.button
+            onClick={() => router.push('/crear-libro')}
+            className="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg shadow hover:shadow-lg transition"
+            whileHover={{ scale: 1.05 }}
+          >
+            Crear Otro Libro
+          </motion.button>
+
+          <motion.button
+            onClick={descargarPDF}
+            disabled={downloading}
+            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg shadow hover:shadow-lg transition flex items-center"
+            whileHover={{ scale: 1.05 }}
+          >
+            {downloading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Generando PDF...
+              </>
+            ) : (
+              '📥 Descargar PDF'
+            )}
+          </motion.button>
+        </div>
+      </motion.div>
     </div>
   );
 }

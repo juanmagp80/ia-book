@@ -1,9 +1,11 @@
 'use client';
-
+import ParticleBackground from "./ParticleBackground";
 export default function HeroSection() {
   return (
-    
+    <> 
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+    <ParticleBackground />
+
       <div className="text-center max-w-4xl px-4">
         <h1 className="text-5xl font-bold text-gray-800 mb-6">
           Crea un libro personalizado en el que tú eres el personaje principal
@@ -21,5 +23,6 @@ export default function HeroSection() {
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -1,9 +1,8 @@
 import { Roboto, Source_Code_Pro } from "next/font/google";
 import "./globals.css";
-
 const roboto = Roboto({
   subsets: ["latin"],
-  weight: ["400", "700"], // Especifica los pesos que necesitas
+  weight: ["400", "700"], 
   variable: "--font-roboto",
 });
 
@@ -22,6 +21,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body
         className={`${roboto.variable} ${sourceCodePro.variable} antialiased min-h-screen bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 animate-gradient-x`}
+        style={{
+          position: "relative", // Aseguramos que el body tenga un contexto relativo
+        }}
       >
         {children}
       </body>
